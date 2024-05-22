@@ -12,8 +12,31 @@
 }
 
 .courses > * {
-    margin-right: 5px;
-    margin-left: 5px;
+    margin-right: 1px;
+    margin-left: 1px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.convertButton {
+    display: flex;
+    justify-content: center;
+    padding: 10px 20px;
+    margin: 10px 0px;
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.convert-button:hover {
+    background-color: #3e8e41;
+}
+
+.h2 {
+    text-align: center;
 }
 
 .course-item {
@@ -21,10 +44,15 @@
 .course-item-title {
     font-weight: 600;
     font-size: 18px;
+    
 }
 .course-item-value {
     font-size: 32px;
     font-weight: 300;
+    width: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .course-item-value.top {
@@ -33,4 +61,8 @@
 
 .course-item-value.bottom {
     color: rgb(19, 189, 61);
+}
+
+body {
+    background-color: black;
 }
