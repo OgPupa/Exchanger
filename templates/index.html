@@ -1,0 +1,103 @@
+{{ define "index" }}
+
+{{ template "header" }}
+
+	<body>
+		<div class="container pt-5 pb-5">
+			<div class="row justify-content-center">
+				<div class="col-6">
+					<!-- Content -->
+					<div class="card p-3">
+						<form action="/save" method="post">
+							<h1 class="h2">Обменный пункт</h1>
+
+							<div class="courses" >
+								<div class="course-item card card-body">
+									<div class="course-item-title">Курс USD</div>
+									<div class="course-item-value" data-value="USD">--.--</div>
+								</div>
+								<div class="course-item card card-body">
+									<div class="course-item-title">Курс CNY</div>
+									<div class="course-item-value" data-value="CNY">--.--</div>
+								</div>
+								<div class="course-item card card-body">
+									<div class="course-item-title">Курс EUR</div>
+									<div class="course-item-value" data-value="EUR">--.--</div>
+								</div>
+								<div class="course-item card card-body">
+									<div class="course-item-title">Курс GPB</div>
+									<div class="course-item-value" data-value="GBP">--.--</div>
+								</div>
+								<div class="course-item card card-body">
+									<div class="course-item-title">Курс JPY</div>
+									<div class="course-item-value" data-value="JPY">--.--</div>
+								</div>
+							</div>
+						<form action="/save" method="post">
+							<div class="row mb-1">
+								<div class="col">
+									<label for="name">Отдаю:</label>
+									<select
+										class="form-control"
+										id="exampleFormControlSelect1"
+										name="take"
+									>
+										<option value="RUB" selected>RUB — Рубли</option>
+									</select>
+								</div>
+								<div class="col">
+									<label for="name">Получаю:</label>
+									<select
+										id="select"
+										name="give"
+										class="form-control"
+										id="exampleFormControlSelect1"
+									>
+										<option value="USD">USD — Доллар США</option>
+										<option value="CNY">CHU — Китайский юань</option>
+										<option value="EUR">EUR — Евро</option>
+										<option value="GBP">GPB — Фунт стерлингов</option>
+										<option value="JPY">JPY — Японский юань</option>
+									</select>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col">
+									<input
+										name="inputCourse"
+										id="input"
+										type="number"
+										step="any"
+										class="form-control"
+										id="name"
+										autofocus
+									/>
+								</div>
+								<div class="col">
+									<input
+										name="outputCourse"
+										id="result"
+										type="number"
+										step="any"
+										class="form-control"
+										id="name"
+									/>
+								</div>
+							</div>
+							<div class="convertButton">
+								<button id="convert-button">Конвертировать</button>					
+							</div>
+						</form>
+						</form>
+					</div>
+					<!-- // Content -->
+				</div>
+				<!-- // col-6 -->
+			</div>
+			<!-- // row -->
+		</div>
+		<!-- // container -->
+
+{{ template "footer" }}
+
+{{ end }}
