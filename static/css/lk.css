@@ -1,0 +1,64 @@
+/* Основные стили для всего документа */
+body {
+    background-color: #000000; /* Черный фон */
+    color: #FFFFFF;           /* Белый текст */
+    font-family: Arial, sans-serif; /* Основной шрифт */
+    margin: 0;
+    padding: 0;
+}
+
+/* Стили для заголовка */
+h1 {
+    text-align: center;
+    padding: 20px;
+}
+
+/* Стили для таблицы */
+table {
+    width: 80%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #444444; /* Серые границы для таблиц */
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #333333; /* Темный фон для заголовков таблицы */
+}
+
+tr:nth-child(even) {
+    background-color: #2C2C2C; /* Темно-серый фон для четных строк таблицы */
+}
+
+/* Стили для формы */
+form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #444444; /* Темно-серая кнопка */
+    color: #FFFFFF;       /* Белый текст у кнопки */
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #555555; /* Более светлый цвет при наведении */
+}
+
+/* Стили для хедера и футера, если они существуют */
+header, footer {
+    background-color: #111111; /* Очень темный фон */
+    color: #FFFFFF;           /* Белый текст */
+    padding: 10px 0;
+    text-align: center;
+}

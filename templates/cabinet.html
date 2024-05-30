@@ -1,0 +1,35 @@
+{{ define "cabinet" }}
+
+{{ template "header" . }}
+
+<head><link rel="stylesheet" href="/static/css/lk.css"></head>
+<body>
+    <h1>Личный кабинет</h1>
+    <table>
+        <tr>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Отчество</th>
+            <th>Email</th>
+            <th>Пол</th>
+            <th>Дата рождения</th>
+            <th>Паспортные данные</th>
+        </tr>
+        <tr>
+            <td>{{.UserName}}</td>
+            <td>{{.UserSurname}}</td>
+            <td>{{.UserMiddlename}}</td>
+            <td>{{.UserEmail}}</td>
+            <td>{{.Male}}</td>
+            <td>{{.DateOfBirth}}</td>
+            <td>{{.PassportData}}</td>
+        </tr>
+    </table>
+    <form action="/logout" method="post">
+        <button type="submit">Выйти</button>
+    </form>
+</body>
+
+{{ template "footer" . }}
+
+{{ end }}

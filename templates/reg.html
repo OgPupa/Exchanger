@@ -1,0 +1,59 @@
+{{ define "reg" }}
+
+{{ template "header" }}
+
+<head><link rel="stylesheet" href="/static/css/register.css"></head>
+<body>
+    <div class="container">
+        <h2>Регистрация личного кабинета</h2>
+        <form action="/reg" method="post">
+            <div class="form-group">
+                <label for="firstName">Имя</label>
+                <input type="text" id="firstName" name="firstName" required>
+            </div>
+            <div class="form-group">
+                <label for="lastName">Фамилия</label>
+                <input type="text" id="lastName" name="lastName" required>
+            </div>
+            <div class="form-group">
+                <label for="middleName">Отчество</label>
+                <input type="text" id="middleName" name="middleName" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Адрес электронной почты</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Пол</label>
+                <select id="gender" name="gender" required>
+                    <option value="">Выберите пол</option>
+                    <option value="male">Мужской</option>
+                    <option value="female">Женский</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="birthDate">Дата рождения</label>
+                <input type="date" id="birthDate" name="birthDate" required>
+            </div>
+            <div class="form-group">
+                <label for="passport">Серия и номер паспорта</label>
+                <input type="text" id="passport" name="passport" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Повторите пароль</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Зарегистрироваться</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+{{ template "footer" }}
+
+{{ end }}

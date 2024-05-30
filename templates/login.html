@@ -1,0 +1,28 @@
+{{ define "login" }}
+
+{{ template "header" }}
+
+<head><link rel="stylesheet" href="/static/css/login.css"></head>
+<body>
+    <div class="container">
+        <h2>Вход в личный кабинет</h2>
+        <form action="/login" method="post">
+            <div class="form-group">
+                <label for="email">Электронная почта:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Войти</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+
+{{ template "footer" }}
+
+{{ end }}
