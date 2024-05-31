@@ -2,7 +2,7 @@
 -- PostgreSQL database cluster dump
 --
 
--- Started on 2024-05-31 02:51:44
+-- Started on 2024-05-31 21:49:37
 
 SET default_transaction_read_only = off;
 
@@ -46,7 +46,7 @@ ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION
 -- Dumped from database version 16.3
 -- Dumped by pg_dump version 16.3
 
--- Started on 2024-05-31 02:51:44
+-- Started on 2024-05-31 21:49:37
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -59,7 +59,7 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
--- Completed on 2024-05-31 02:51:44
+-- Completed on 2024-05-31 21:49:37
 
 --
 -- PostgreSQL database dump complete
@@ -76,7 +76,7 @@ SET row_security = off;
 -- Dumped from database version 16.3
 -- Dumped by pg_dump version 16.3
 
--- Started on 2024-05-31 02:51:44
+-- Started on 2024-05-31 21:49:37
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -133,7 +133,7 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
--- Completed on 2024-05-31 02:51:44
+-- Completed on 2024-05-31 21:49:37
 
 --
 -- PostgreSQL database dump complete
@@ -150,7 +150,7 @@ SET row_security = off;
 -- Dumped from database version 16.3
 -- Dumped by pg_dump version 16.3
 
--- Started on 2024-05-31 02:51:44
+-- Started on 2024-05-31 21:49:38
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -368,7 +368,7 @@ ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
--- Completed on 2024-05-31 02:51:45
+-- Completed on 2024-05-31 21:49:38
 
 --
 -- PostgreSQL database dump complete
@@ -385,7 +385,7 @@ ALTER TABLE ONLY public.users
 -- Dumped from database version 16.3
 -- Dumped by pg_dump version 16.3
 
--- Started on 2024-05-31 02:51:45
+-- Started on 2024-05-31 21:49:38
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -399,7 +399,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 4855 (class 1262 OID 16407)
+-- TOC entry 4854 (class 1262 OID 16407)
 -- Name: course; Type: DATABASE; Schema: -; Owner: postgres
 --
 
@@ -461,7 +461,7 @@ CREATE SEQUENCE public.convert_id_seq
 ALTER SEQUENCE public.convert_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4856 (class 0 OID 0)
+-- TOC entry 4855 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: convert_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -506,7 +506,7 @@ CREATE SEQUENCE public.lk_id_seq
 ALTER SEQUENCE public.lk_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4857 (class 0 OID 0)
+-- TOC entry 4856 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: lk_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -531,7 +531,7 @@ ALTER TABLE ONLY public.lk ALTER COLUMN id SET DEFAULT nextval('public.lk_id_seq
 
 
 --
--- TOC entry 4847 (class 0 OID 16409)
+-- TOC entry 4846 (class 0 OID 16409)
 -- Dependencies: 216
 -- Data for Name: convert; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -550,11 +550,18 @@ COPY public.convert (id, conv_time, amount_in, amount_out, currency_in, currency
 11	2024-05-24 16:39:55.199344	1000	17.37	RUB	JPY	\N	\N
 12	2024-05-24 20:03:18.274471	300	3.32	RUB	USD	\N	\N
 13	2024-05-31 02:48:50.497974	700	6.13	RUB	GBP	\N	\N
+15	2024-05-31 19:28:47.778122	500	5.54	RUB	USD	anton@anton.com	0
+16	2024-05-31 19:51:49.862789	600	10.42	RUB	JPY	ilya@mail.com	1
+17	2024-05-31 19:52:38.1786	1000	10.23	RUB	EUR	anton@anton.com	2
+18	2024-05-31 20:28:33.834415	100	1.11	RUB	USD	ilya@mail.com	1
+19	2024-05-31 20:40:17.824666	153	1.7	RUB	USD	ilya@mail.com	1
+20	2024-05-31 20:51:39.893997	600	6.65	RUB	USD	ilya@mail.com	1
+21	2024-05-31 21:45:08.334246	500	5.11	RUB	EUR	grisha@mail.com	3
 \.
 
 
 --
--- TOC entry 4849 (class 0 OID 16445)
+-- TOC entry 4848 (class 0 OID 16445)
 -- Dependencies: 218
 -- Data for Name: lk; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -562,25 +569,26 @@ COPY public.convert (id, conv_time, amount_in, amount_out, currency_in, currency
 COPY public.lk (id, user_name, user_surname, user_middlename, user_email, male, date_of_birth, passport_data, user_password) FROM stdin;
 1	Илья	Ильин	Ильич	ilya@mail.com	male   	1999-01-01	1111111111	a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3
 2	Антон	Антонов	Антонович	anton@anton.com	male   	2002-02-02	2222222222	9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0
+3	Григорий	Григорьев	Григорьевич	grisha@mail.com	male   	1993-07-08	0000000000	ce770667e5f9b0d8f55367bb79419689d90c48451bb33f079f3a9a72ae132de8
 \.
 
 
 --
--- TOC entry 4858 (class 0 OID 0)
+-- TOC entry 4857 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: convert_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.convert_id_seq', 13, true);
+SELECT pg_catalog.setval('public.convert_id_seq', 21, true);
 
 
 --
--- TOC entry 4859 (class 0 OID 0)
+-- TOC entry 4858 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: lk_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.lk_id_seq', 2, true);
+SELECT pg_catalog.setval('public.lk_id_seq', 3, true);
 
 
 --
@@ -611,16 +619,7 @@ ALTER TABLE ONLY public.lk
 
 
 --
--- TOC entry 4701 (class 2606 OID 16460)
--- Name: convert fk_lkid; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.convert
-    ADD CONSTRAINT fk_lkid FOREIGN KEY (lk_id) REFERENCES public.lk(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- TOC entry 4702 (class 2606 OID 16455)
+-- TOC entry 4701 (class 2606 OID 16455)
 -- Name: convert fk_useremail; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -628,13 +627,13 @@ ALTER TABLE ONLY public.convert
     ADD CONSTRAINT fk_useremail FOREIGN KEY (user_email) REFERENCES public.lk(user_email) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2024-05-31 02:51:45
+-- Completed on 2024-05-31 21:49:38
 
 --
 -- PostgreSQL database dump complete
 --
 
--- Completed on 2024-05-31 02:51:45
+-- Completed on 2024-05-31 21:49:38
 
 --
 -- PostgreSQL database cluster dump complete

@@ -2,7 +2,7 @@
 
 {{ template "header" . }}
 
-<head><link rel="stylesheet" href="/static/css/lk.css"></head>
+<head><link rel="stylesheet" href="/static/css/cabinet.css"></head>
 <body>
     <div class="top-right">
         <button class="main-button" onclick="window.location.href='/'">На главную</button>
@@ -30,6 +30,16 @@
     </table>
     <form action="/logout" method="post">
         <button type="submit">Выйти</button>
+    </form>
+    <form action="/report" method="POST">
+        <label for="period">Выберите период:</label>
+        <select name="period" id="period">
+            <option value="day">День</option>
+            <option value="week">Неделя</option>
+            <option value="month">Месяц</option>
+            <option value="year">Год</option>
+        </select>
+        <button type="submit">Сформировать отчет</button>
     </form>
 </body>
 

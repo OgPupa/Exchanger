@@ -330,6 +330,115 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
+func getReportPeriodDates(period string) (time.Time, time.Time) {
+	now := time.Now()
+	var startDate time.Time
+
+	switch period {
+	case "day":
+		startDate = now.AddDate(0, 0, -1)
+	case "week":
+		startDate = now.AddDate(0, 0, -7)
+	case "month":
+		startDate = now.AddDate(0, -1, 0)
+	case "year":
+		startDate = now.AddDate(-1, 0, 0)
+	default:
+		startDate = now.AddDate(0, 0, -1)
+	}
+
+	return startDate, now
+}
+
+func generateReport(w http.ResponseWriter, r *http.Request) {
+	// Проверка аутентификации
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, "Ошибка получения сессии", http.StatusInternalServerError)
+		return
+	}
+
+	auth, ok := session.Values["authenticated"].(bool)
+	if !ok || !auth {
+		http.Error(w, "Сначала выполните вход", http.StatusUnauthorized)
+		log.Println("Попытка выполнения операции без аутентификации.")
+		return
+	}
+
+	userEmail, _ := session.Values["userEmail"].(string)
+	period := r.URL.Query().Get("period")
+
+	startDate, endDate := getReportPeriodDates(period)
+
+	connStr := "postgres://postgres:Googleapple123@localhost:5432/course"
+	conn, err := pgx.Connect(context.Background(), connStr)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка подключения к БД: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer conn.Close(context.Background())
+
+	rows, err := conn.Query(
+		context.Background(),
+		"SELECT id, conv_time, amount_in, amount_out, currency_in, currency_out, user_email FROM Convert WHERE user_email = $1 AND conv_time BETWEEN $2 AND $3",
+		userEmail,
+		startDate,
+		endDate,
+	)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка выполнения запроса: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(40, 10, "Report")
+	pdf.Ln(20)
+
+	pdf.SetFont("Arial", "", 12)
+	for rows.Next() {
+		var id int
+		var convTime time.Time
+		var amountIn, amountOut float64
+		var currencyIn, currencyOut, userEmail string
+
+		err := rows.Scan(&id, &convTime, &amountIn, &amountOut, &currencyIn, &currencyOut, &userEmail)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Ошибка сканирования строки: %v", err), http.StatusInternalServerError)
+			continue
+		}
+
+		pdf.Cell(40, 10, fmt.Sprintf("Operation number: %d", id))
+		pdf.Ln(10)
+		pdf.Cell(40, 10, fmt.Sprintf("Conversion time: %s", convTime.Format("2006-01-02 15:04:05")))
+		pdf.Ln(10)
+		pdf.Cell(40, 10, fmt.Sprintf("Entry Amount: %.2f", amountIn))
+		pdf.Ln(10)
+		pdf.Cell(40, 10, fmt.Sprintf("Exit Amount: %.2f", amountOut))
+		pdf.Ln(10)
+		pdf.Cell(40, 10, fmt.Sprintf("Input Currency: %s", currencyIn))
+		pdf.Ln(10)
+		pdf.Cell(40, 10, fmt.Sprintf("Outgoing Currency: %s", currencyOut))
+		pdf.Ln(20)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка при обработке результата запроса: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "inline; filename=\"report.pdf\"")
+
+	err = pdf.Output(w)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка генерации PDF: %v", err), http.StatusInternalServerError)
+	}
+}
+
 func handleFunc() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	http.HandleFunc("/", index)
@@ -338,6 +447,7 @@ func handleFunc() {
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/cabinet", cabinet)
 	http.HandleFunc("/logout", logout)
+	http.HandleFunc("/report", generateReport)
 	fmt.Println("Server is listening: http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
