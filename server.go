@@ -172,7 +172,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, amountOut float64, currencyIn, currencyOut string) {
+func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, amountOut float64, currencyIn, currencyOut, userEmail string) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
@@ -191,6 +191,8 @@ func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, am
 	pdf.Cell(40, 10, fmt.Sprintf("Input Currency: %s", currencyIn))
 	pdf.Ln(10)
 	pdf.Cell(40, 10, fmt.Sprintf("Outgoing Currency: %s", currencyOut))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("User Email: %s", userEmail))
 
 	err := pdf.Output(w)
 	if err != nil {
@@ -199,6 +201,21 @@ func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, am
 }
 
 func save(w http.ResponseWriter, r *http.Request) {
+	// Проверка аутентификации
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, "Ошибка получения сессии", http.StatusInternalServerError)
+		return
+	}
+
+	auth, ok := session.Values["authenticated"].(bool)
+	if !ok || !auth {
+		http.Error(w, "Сначала выполните вход", http.StatusUnauthorized)
+		log.Println("Попытка выполнения операции без аутентификации.")
+		return
+	}
+
+	userEmail, _ := session.Values["userEmail"].(string)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Метод должен быть POST", http.StatusMethodNotAllowed)
 		return
@@ -229,17 +246,31 @@ func save(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close(context.Background())
 
+	// Получение user_id из таблицы lk на основе email пользователя
+	var userID int
+	err = conn.QueryRow(
+		context.Background(),
+		"SELECT id FROM lk WHERE user_email = $1",
+		userEmail,
+	).Scan(&userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка получения userID: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	currentTime := time.Now()
 
 	var id int
 	err = conn.QueryRow(
 		context.Background(),
-		"INSERT INTO Convert (amount_in, amount_out, conv_time, currency_in, currency_out) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		"INSERT INTO Convert (amount_in, amount_out, conv_time, currency_in, currency_out, lk_id, user_email) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
 		inputCourse,
 		outputCourse,
 		currentTime,
 		take,
 		give,
+		userID,
+		userEmail,
 	).Scan(&id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Ошибка выполнения запроса: %v", err), http.StatusInternalServerError)
@@ -249,7 +280,7 @@ func save(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", "inline; filename=\"receipt.pdf\"")
 
-	generatePDF(w, id, currentTime, inputCourse, outputCourse, take, give)
+	generatePDF(w, id, currentTime, inputCourse, outputCourse, take, give, userEmail)
 }
 
 func cabinet(w http.ResponseWriter, r *http.Request) {
