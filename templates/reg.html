@@ -9,14 +9,14 @@
         <div class="form-group">
             <button class="main-button" onclick="window.location.href='/'">На главную</button>
         </div>
-        <form action="/reg" method="post">
-            <div class="form-group">
-                <label for="firstName">Имя</label>
-                <input type="text" id="firstName" name="firstName" required>
-            </div>
+        <form action="/reg" method="post" id="registerForm">
             <div class="form-group">
                 <label for="lastName">Фамилия</label>
                 <input type="text" id="lastName" name="lastName" required>
+            </div>
+            <div class="form-group">
+                <label for="firstName">Имя</label>
+                <input type="text" id="firstName" name="firstName" required>
             </div>
             <div class="form-group">
                 <label for="middleName">Отчество</label>

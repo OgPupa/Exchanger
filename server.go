@@ -38,9 +38,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func reg(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		middleName := r.FormValue("middleName")
 		firstName := r.FormValue("firstName")
 		lastName := r.FormValue("lastName")
-		middleName := r.FormValue("middleName")
 		email := r.FormValue("email")
 		gender := r.FormValue("gender")
 		birthDate := r.FormValue("birthDate")
@@ -50,6 +50,19 @@ func reg(w http.ResponseWriter, r *http.Request) {
 
 		if password != confirmPassword {
 			http.Error(w, "Пароли не совпадают", http.StatusBadRequest)
+			return
+		}
+
+		// Проверяем правильность даты рождения
+		userBirthDate, err := time.Parse("2006-01-02", birthDate)
+		if err != nil {
+			http.Error(w, "Неправильный формат даты рождения", http.StatusBadRequest)
+			return
+		}
+
+		// Проверяем, что пользователю более 18 лет
+		if !isOlderThan18(userBirthDate) {
+			http.Error(w, "Вам должно быть не менее 18 лет для регистрации", http.StatusBadRequest)
 			return
 		}
 
@@ -67,8 +80,8 @@ func reg(w http.ResponseWriter, r *http.Request) {
 
 		_, err = conn.Exec(
 			context.Background(),
-			"INSERT INTO lk (user_name, user_surname, user_middlename, user_email, male, date_of_birth, passport_data, user_password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-			firstName, lastName, middleName, email, gender, birthDate, passport, passwordHashStr,
+			"INSERT INTO lk (user_surname, user_name, user_middlename, user_email, male, date_of_birth, passport_data, user_password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+			lastName, firstName, middleName, email, gender, birthDate, passport, passwordHashStr,
 		)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Ошибка выполнения запроса: %v", err), http.StatusInternalServerError)
@@ -89,6 +102,16 @@ func reg(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// Функция для проверки возраста
+func isOlderThan18(birthDate time.Time) bool {
+	now := time.Now()
+	age := now.Year() - birthDate.Year()
+	if now.Month() < birthDate.Month() || (now.Month() == birthDate.Month() && now.Day() < birthDate.Day()) {
+		age--
+	}
+	return age >= 18
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +160,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Форматирование даты рождения в строку "YYYY-MM-DD"
+		formattedDateOfBirth := dateOfBirth.Format("2006-01-02")
+
 		// Сохранение данных в сессию
 		session, _ := store.Get(r, "session")
 		session.Values["authenticated"] = true
@@ -145,7 +171,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		session.Values["userMiddlename"] = userMiddlename
 		session.Values["userEmail"] = userEmail
 		session.Values["male"] = male
-		session.Values["dateOfBirth"] = dateOfBirth
+		session.Values["dateOfBirth"] = formattedDateOfBirth
 		session.Values["passportData"] = passportData
 		err = session.Save(r, w)
 		if err != nil {
@@ -227,14 +253,18 @@ func save(w http.ResponseWriter, r *http.Request) {
 	give := r.FormValue("give")
 
 	inputCourse, err := strconv.ParseFloat(inputCourseStr, 64)
-	if err != nil {
-		http.Error(w, "Некорректное значение inputCourse", http.StatusBadRequest)
+	if err != nil || inputCourse < 0 {
+		http.Error(w, "Некорректное значение inputCourse: не может быть отрицательным", http.StatusBadRequest)
+		return
+	}
+	if inputCourse == 0 {
+		http.Error(w, "inputCourse не может быть нулем", http.StatusBadRequest)
 		return
 	}
 
 	outputCourse, err := strconv.ParseFloat(outputCourseStr, 64)
-	if err != nil {
-		http.Error(w, "Некорректное значение outputCourse", http.StatusBadRequest)
+	if err != nil || outputCourse < 0 {
+		http.Error(w, "Некорректное значение outputCourse: не может быть отрицательным", http.StatusBadRequest)
 		return
 	}
 
@@ -259,6 +289,25 @@ func save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currentTime := time.Now()
+	startOfDay := currentTime.Truncate(24 * time.Hour)
+	endOfDay := startOfDay.Add(24*time.Hour - 1)
+
+	// Проверка суммарной дневной конвертации
+	var totalConvertedToday float64
+	err = conn.QueryRow(
+		context.Background(),
+		"SELECT COALESCE(SUM(amount_in), 0) FROM Convert WHERE lk_id = $1 AND currency_in = $2 AND conv_time BETWEEN $3 AND $4",
+		userID, take, startOfDay, endOfDay,
+	).Scan(&totalConvertedToday)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка проверки дневной лимит конвертации: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if totalConvertedToday+inputCourse > 1000 {
+		http.Error(w, "Дневной лимит конвертации для одной валюты превышен (максимум 1000 единиц)", http.StatusForbidden)
+		return
+	}
 
 	var id int
 	err = conn.QueryRow(
