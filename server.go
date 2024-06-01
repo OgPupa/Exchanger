@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -36,6 +37,11 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type Response struct {
+	Message string `json:"message"`
+	Status  string `json:"status"` // "error" or "success"
+}
+
 func reg(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		middleName := r.FormValue("middleName")
@@ -49,31 +55,48 @@ func reg(w http.ResponseWriter, r *http.Request) {
 		confirmPassword := r.FormValue("confirmPassword")
 
 		if password != confirmPassword {
-			http.Error(w, "Пароли не совпадают", http.StatusBadRequest)
+			response := Response{
+				Message: "Пароли не совпадают",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		// Проверяем правильность даты рождения
 		userBirthDate, err := time.Parse("2006-01-02", birthDate)
 		if err != nil {
-			http.Error(w, "Неправильный формат даты рождения", http.StatusBadRequest)
+			response := Response{
+				Message: "Неправильный формат даты рождения",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		// Проверяем, что пользователю более 18 лет
 		if !isOlderThan18(userBirthDate) {
-			http.Error(w, "Вам должно быть не менее 18 лет для регистрации", http.StatusBadRequest)
+			response := Response{
+				Message: "Вам должно быть не менее 18 лет для регистрации",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		// Хэширование пароля для безопасности
 		passwordHash := sha256.Sum256([]byte(password))
 		passwordHashStr := hex.EncodeToString(passwordHash[:])
 
 		connStr := "postgres://postgres:Googleapple123@localhost:5432/course"
 		conn, err := pgx.Connect(context.Background(), connStr)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Ошибка подключения к БД: %v", err), http.StatusInternalServerError)
+			response := Response{
+				Message: fmt.Sprintf("Ошибка подключения к БД: %v", err),
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 		defer conn.Close(context.Background())
@@ -84,23 +107,43 @@ func reg(w http.ResponseWriter, r *http.Request) {
 			lastName, firstName, middleName, email, gender, birthDate, passport, passwordHashStr,
 		)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Ошибка выполнения запроса: %v", err), http.StatusInternalServerError)
+			response := Response{
+				Message: fmt.Sprintf("Ошибка выполнения запроса: %v", err),
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		http.Redirect(w, r, "/login", http.StatusFound)
+		response := Response{
+			Message: "Регистрация успешна! Перенаправление на страницу входа...",
+			Status:  "success",
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
 	t, err := template.ParseFiles("templates/reg.html", "templates/header.html", "templates/footer.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response := Response{
+			Message: err.Error(),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
 	err = t.ExecuteTemplate(w, "reg", nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response := Response{
+			Message: err.Error(),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 	}
 }
 
