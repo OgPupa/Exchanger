@@ -181,14 +181,24 @@ func login(w http.ResponseWriter, r *http.Request) {
 		var storedPassword string
 		err = conn.QueryRow(context.Background(), "SELECT user_password FROM lk WHERE user_email=$1", email).Scan(&storedPassword)
 		if err != nil {
-			http.Error(w, "Неверный логин или пароль", http.StatusUnauthorized)
+			response := Response{
+				Message: "Неверный логин или пароль",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			log.Printf("Ошибка SQL запроса или пользователь не найден: %v", err)
 			return
 		}
 
 		// Сравнение хэшей паролей
 		if storedPassword != passwordHashStr {
-			http.Error(w, "Неверный логин или пароль", http.StatusUnauthorized)
+			response := Response{
+				Message: "Неверный логин или пароль",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			log.Println("Пароль не совпадает.")
 			return
 		}
@@ -198,7 +208,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 		var dateOfBirth time.Time
 		err = conn.QueryRow(context.Background(), "SELECT user_name, user_surname, user_middlename, user_email, male, date_of_birth, passport_data FROM lk WHERE user_email=$1", email).Scan(&userName, &userSurname, &userMiddlename, &userEmail, &male, &dateOfBirth, &passportData)
 		if err != nil {
-			http.Error(w, "Ошибка получения данных пользователя", http.StatusInternalServerError)
+			response := Response{
+				Message: "Ошибка получения данных",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			log.Printf("Ошибка получения данных пользователя: %v", err)
 			return
 		}
@@ -218,13 +233,23 @@ func login(w http.ResponseWriter, r *http.Request) {
 		session.Values["passportData"] = passportData
 		err = session.Save(r, w)
 		if err != nil {
-			http.Error(w, "Ошибка сохранения сессии", http.StatusInternalServerError)
+			response := Response{
+				Message: "Ошибка сохранения сессии",
+				Status:  "error",
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
 			log.Printf("Ошибка сохранения сессии: %v", err)
 			return
 		}
 
 		// Перенаправление в кабинет
-		http.Redirect(w, r, "/cabinet", http.StatusFound)
+		response := Response{
+			Message: "Успешный вход! Перенаправление в личный кабинет	й...",
+			Status:  "success",
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 		log.Println("Аутентификация успешна, перенаправление в кабинет.")
 		return
 	}

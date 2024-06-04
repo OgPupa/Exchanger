@@ -26,3 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        sendFormRequest('/login', 'loginForm', () => {
+            window.location.href = "/cabinet";
+        });
+    });
+});
