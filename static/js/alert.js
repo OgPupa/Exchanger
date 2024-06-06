@@ -39,8 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveForm').addEventListener('submit', (event) => {
         event.preventDefault();
-        sendFormRequest('/', 'saveForm', () => {
-            window.location.href = "/save";
+        sendFormRequest('/save', 'saveForm', async () => {
+            // Загрузка PDF после успешной конвертации
+            const pdfResponse = await fetch('/generatePDF');
+            const pdfBlob = await pdfResponse.blob();
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            window.open(pdfUrl);
         });
     });
 });

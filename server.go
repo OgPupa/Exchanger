@@ -424,10 +424,16 @@ func save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", "inline; filename=\"receipt.pdf\"")
+	// Возврат успешного JSON-ответа
+	response := Response{
+		Message: "Конвертация успешно выполнена",
+		Status:  "success",
+	}
+	json.NewEncoder(w).Encode(response)
+}
 
-	generatePDF(w, id, currentTime, inputCourse, outputCourse, take, give, userEmail)
+func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
+	// Код для генерации PDF
 }
 
 func cabinet(w http.ResponseWriter, r *http.Request) {
