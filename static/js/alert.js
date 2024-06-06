@@ -35,3 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('saveForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        sendFormRequest('/', 'saveForm', () => {
+            window.location.href = "/save";
+        });
+    });
+});

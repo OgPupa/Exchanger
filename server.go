@@ -245,7 +245,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 		// Перенаправление в кабинет
 		response := Response{
-			Message: "Успешный вход! Перенаправление в личный кабинет	й...",
+			Message: "Успешный вход! Перенаправление в личный кабинет...",
 			Status:  "success",
 		}
 		w.WriteHeader(http.StatusOK)
@@ -304,14 +304,24 @@ func save(w http.ResponseWriter, r *http.Request) {
 
 	auth, ok := session.Values["authenticated"].(bool)
 	if !ok || !auth {
-		http.Error(w, "Сначала выполните вход", http.StatusUnauthorized)
+		response := Response{
+			Message: "Сначала выполните вход",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		log.Println("Попытка выполнения операции без аутентификации.")
 		return
 	}
 
 	userEmail, _ := session.Values["userEmail"].(string)
 	if r.Method != http.MethodPost {
-		http.Error(w, "Метод должен быть POST", http.StatusMethodNotAllowed)
+		response := Response{
+			Message: "Метод должен быть POST",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -322,17 +332,32 @@ func save(w http.ResponseWriter, r *http.Request) {
 
 	inputCourse, err := strconv.ParseFloat(inputCourseStr, 64)
 	if err != nil || inputCourse < 0 {
-		http.Error(w, "Некорректное значение inputCourse: не может быть отрицательным", http.StatusBadRequest)
+		response := Response{
+			Message: "Некорректное значения поля Отдаю: не может быть отрицательным",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	if inputCourse == 0 {
-		http.Error(w, "inputCourse не может быть нулем", http.StatusBadRequest)
+		response := Response{
+			Message: "Некорректное значения поля Отдаю: не может быть нулем",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
 	outputCourse, err := strconv.ParseFloat(outputCourseStr, 64)
 	if err != nil || outputCourse < 0 {
-		http.Error(w, "Некорректное значение outputCourse: не может быть отрицательным", http.StatusBadRequest)
+		response := Response{
+			Message: "Некорректное значения поля Получаю: не может быть отрицательным",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -373,7 +398,12 @@ func save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if totalConvertedToday+inputCourse > 1000 {
-		http.Error(w, "Дневной лимит конвертации для одной валюты превышен (максимум 1000 единиц)", http.StatusForbidden)
+		response := Response{
+			Message: "Дневной лимит конвертации для одной валюты превышен (максимум 1000 единиц)",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -411,7 +441,12 @@ func cabinet(w http.ResponseWriter, r *http.Request) {
 	// Проверка аутентификации
 	auth, ok := session.Values["authenticated"].(bool)
 	if !ok || !auth {
-		http.Error(w, "Сначала выполните вход", http.StatusUnauthorized)
+		response := Response{
+			Message: "Сначала выполните вход",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		log.Println("Попытка доступа к кабинету без аутентификации.")
 		return
 	}

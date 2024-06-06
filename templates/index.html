@@ -6,15 +6,6 @@
 		<div class="container pt-5 pb-5">
 			<div class="row justify-content-center">
 				<div class="col-6">
-					<div class="top-right">
-						<button class="login-button" onclick="window.location.href='/login'">Вход</button>
-					</div>
-					<div class="top-right">
-						<button class="register-button" onclick="window.location.href='/reg'">Зарегистрироваться</button>
-					</div>
-					<div class="top-right">
-						<button class="lk-button" onclick="window.location.href='/cabinet'">Личный кабинет пользователя</button>
-					</div>
 					<!-- Content -->
 					<div class="card p-3">
 						<form action="/save" method="post">
@@ -42,7 +33,7 @@
 									<div class="course-item-value" data-value="JPY">--.--</div>
 								</div>
 							</div>
-						<form action="/save" method="post">
+						<form action="/save" method="post" id="saveForm">
 							<div class="row mb-1">
 								<div class="col">
 									<label for="name">Отдаю:</label>

@@ -81,23 +81,3 @@ function convertValue(){
     result.value = (parseFloat(input.value) / rates[select.value].Value).toFixed(2);
 
 }
-
-convertButton.addEventListener('click', function () {
-    if (!dailyOperations[select.value]) {
-        dailyOperations[select.value] = {};
-    }
-
-    if (!dailyOperations[select.value][currentDay]) {
-        dailyOperations[select.value][currentDay] = 0;
-    }
-
-    if (dailyOperations[select.value][currentDay] + parseFloat(input.value) > 1000) {
-        alert(`Для ${select.value} операция не может превышать 1000 единиц в течение одного дня.`);
-        return;
-    }
-
-    dailyOperations[select.value][currentDay] += parseFloat(input.value);
-
-
-    alert('Конвертация проведена успешно.');
-});
