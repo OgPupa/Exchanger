@@ -266,38 +266,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, amountOut float64, currencyIn, currencyOut, userEmail string) {
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
-	pdf.Cell(40, 10, "Receipt")
-	pdf.Ln(20)
-
-	pdf.SetFont("Arial", "", 12)
-	pdf.Cell(40, 10, fmt.Sprintf("Operation number: %d", id))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Conversion time: %s", convTime.Format("2006-01-02 15:04:05")))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Entry Amount: %.2f", amountIn))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Exit Amount: %.2f", amountOut))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Input Currency: %s", currencyIn))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("Outgoing Currency: %s", currencyOut))
-	pdf.Ln(10)
-	pdf.Cell(40, 10, fmt.Sprintf("User Email: %s", userEmail))
-
-	err := pdf.Output(w)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка генерации PDF: %v", err), http.StatusInternalServerError)
-	}
-}
-
 func save(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "session")
 	if err != nil {
-		http.Error(w, "Ошибка получения сессии", http.StatusInternalServerError)
+		response := Response{
+			Message: "Ошибка получения сессии",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -441,41 +418,66 @@ func save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Генерация PDF (функция generatePDF уже должна писать в ResponseWriter)
-	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", "inline; filename=\"receipt.pdf\"")
-	generatePDF(w, id, currentTime, inputCourse, outputCourse, take, give, userEmail)
-
 	// Отправка успешного ответа
 	response := Response{
 		Message: "Конвертация успешно завершена",
 		Status:  "success",
 	}
 	json.NewEncoder(w).Encode(response)
+
+	generatePDF(w, id, currentTime, inputCourse, outputCourse, take, give, userEmail)
+}
+
+func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, amountOut float64, currencyIn, currencyOut, userEmail string) {
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(40, 10, "Receipt")
+	pdf.Ln(20)
+
+	pdf.SetFont("Arial", "", 12)
+	pdf.Cell(40, 10, fmt.Sprintf("Operation number: %d", id))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("Conversion time: %s", convTime.Format("2006-01-02 15:04:05")))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("Entry Amount: %.2f", amountIn))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("Exit Amount: %.2f", amountOut))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("Input Currency: %s", currencyIn))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("Outgoing Currency: %s", currencyOut))
+	pdf.Ln(10)
+	pdf.Cell(40, 10, fmt.Sprintf("User Email: %s", userEmail))
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename=receipt.pdf")
+
+	err := pdf.Output(w)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка генерации PDF: %v", err), http.StatusInternalServerError)
+	}
 }
 
 func cabinet(w http.ResponseWriter, r *http.Request) {
-	// Получение сессии
 	session, err := store.Get(r, "session")
 	if err != nil {
-		http.Error(w, "Ошибка получения сессии", http.StatusInternalServerError)
+		response := Response{
+			Message: "Ошибка получения сессии",
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	// Проверка аутентификации
 	auth, ok := session.Values["authenticated"].(bool)
 	if !ok || !auth {
-		response := Response{
-			Message: "Сначала выполните вход",
-			Status:  "error",
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		log.Println("Попытка доступа к кабинету без аутентификации.")
 		return
 	}
 
-	// Подготовка данных для шаблона
 	data := map[string]interface{}{
 		"UserName":       session.Values["userName"],
 		"UserSurname":    session.Values["userSurname"],
@@ -486,15 +488,26 @@ func cabinet(w http.ResponseWriter, r *http.Request) {
 		"PassportData":   session.Values["passportData"],
 	}
 
-	// Отображение страницы кабинета
 	t, err := template.ParseFiles("templates/cabinet.html", "templates/header.html", "templates/footer.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response := Response{
+			Message: err.Error(),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
+
 	err = t.ExecuteTemplate(w, "cabinet", data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response := Response{
+			Message: err.Error(),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
 	}
 
 	response := Response{

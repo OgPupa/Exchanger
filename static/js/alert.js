@@ -1,3 +1,33 @@
+const sendFormRequestReceipt = async (url, formId, successHandler) => {
+    try {
+        const formData = new FormData(document.getElementById(formId));
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const result = await response.json();
+            alert(result.message);
+            return;
+        }
+
+        const blob = await response.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'receipt.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (successHandler) {
+            successHandler();
+        }
+    } catch (error) {
+        alert(`Network error: ${error.message}`);
+    }
+};
+
 const sendFormRequest = async (url, formId, successHandler) => {
     try {
         const formData = new FormData(document.getElementById(formId));
@@ -39,16 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveForm').addEventListener('submit', (event) => {
         event.preventDefault();
-        sendFormRequest('/', 'saveForm', () => {
-            window.location.href = "/save";
-        });
-    });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('cabinetButton').addEventListener('click', () => {
-        sendCabinetRequest('/cabinet', () => {
-            window.location.href = "/cabinet";
+        sendFormRequestReceipt('/save', 'saveForm', () => {
+            window.location.href = "/";
         });
     });
 });
