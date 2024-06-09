@@ -295,7 +295,6 @@ func generatePDF(w http.ResponseWriter, id int, convTime time.Time, amountIn, am
 }
 
 func save(w http.ResponseWriter, r *http.Request) {
-	// Проверка аутентификации
 	session, err := store.Get(r, "session")
 	if err != nil {
 		http.Error(w, "Ошибка получения сессии", http.StatusInternalServerError)
@@ -333,7 +332,7 @@ func save(w http.ResponseWriter, r *http.Request) {
 	inputCourse, err := strconv.ParseFloat(inputCourseStr, 64)
 	if err != nil || inputCourse < 0 {
 		response := Response{
-			Message: "Некорректное значения поля Отдаю: не может быть отрицательным",
+			Message: "Некорректное значение поля Отдаю: не может быть отрицательным",
 			Status:  "error",
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -342,7 +341,7 @@ func save(w http.ResponseWriter, r *http.Request) {
 	}
 	if inputCourse == 0 {
 		response := Response{
-			Message: "Некорректное значения поля Отдаю: не может быть нулем",
+			Message: "Некорректное значение поля Отдаю: не может быть нулем",
 			Status:  "error",
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -353,7 +352,7 @@ func save(w http.ResponseWriter, r *http.Request) {
 	outputCourse, err := strconv.ParseFloat(outputCourseStr, 64)
 	if err != nil || outputCourse < 0 {
 		response := Response{
-			Message: "Некорректное значения поля Получаю: не может быть отрицательным",
+			Message: "Некорректное значение поля Получаю: не может быть отрицательным",
 			Status:  "error",
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -364,12 +363,16 @@ func save(w http.ResponseWriter, r *http.Request) {
 	connStr := "postgres://postgres:Googleapple123@localhost:5432/course"
 	conn, err := pgx.Connect(context.Background(), connStr)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка подключения к БД: %v", err), http.StatusInternalServerError)
+		response := Response{
+			Message: fmt.Sprintf("Ошибка подключения к БД: %v", err),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	defer conn.Close(context.Background())
 
-	// Получение user_id из таблицы lk на основе email пользователя
 	var userID int
 	err = conn.QueryRow(
 		context.Background(),
@@ -377,7 +380,12 @@ func save(w http.ResponseWriter, r *http.Request) {
 		userEmail,
 	).Scan(&userID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка получения userID: %v", err), http.StatusInternalServerError)
+		response := Response{
+			Message: fmt.Sprintf("Ошибка получения userID: %v", err),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -385,7 +393,6 @@ func save(w http.ResponseWriter, r *http.Request) {
 	startOfDay := currentTime.Truncate(24 * time.Hour)
 	endOfDay := startOfDay.Add(24*time.Hour - 1)
 
-	// Проверка суммарной дневной конвертации
 	var totalConvertedToday float64
 	err = conn.QueryRow(
 		context.Background(),
@@ -393,7 +400,12 @@ func save(w http.ResponseWriter, r *http.Request) {
 		userID, take, startOfDay, endOfDay,
 	).Scan(&totalConvertedToday)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка проверки дневной лимит конвертации: %v", err), http.StatusInternalServerError)
+		response := Response{
+			Message: fmt.Sprintf("Ошибка проверки дневного лимита конвертации: %v", err),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
@@ -420,20 +432,26 @@ func save(w http.ResponseWriter, r *http.Request) {
 		userEmail,
 	).Scan(&id)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка выполнения запроса: %v", err), http.StatusInternalServerError)
+		response := Response{
+			Message: fmt.Sprintf("Ошибка выполнения запроса: %v", err),
+			Status:  "error",
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	// Возврат успешного JSON-ответа
+	// Генерация PDF (функция generatePDF уже должна писать в ResponseWriter)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "inline; filename=\"receipt.pdf\"")
+	generatePDF(w, id, currentTime, inputCourse, outputCourse, take, give, userEmail)
+
+	// Отправка успешного ответа
 	response := Response{
-		Message: "Конвертация успешно выполнена",
+		Message: "Конвертация успешно завершена",
 		Status:  "success",
 	}
 	json.NewEncoder(w).Encode(response)
-}
-
-func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
-	// Код для генерации PDF
 }
 
 func cabinet(w http.ResponseWriter, r *http.Request) {
@@ -478,6 +496,12 @@ func cabinet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	response := Response{
+		Message: "Добро пожаловать в кабинет",
+		Status:  "success",
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
